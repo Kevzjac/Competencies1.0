@@ -356,7 +356,7 @@
             </div>
         </div>
         <div class="header-sub">
-            <span class="badge"><i class="fas fa-chart-line"></i> Distribución normal</span>
+            <span class="badge"><i class="fas fa-chart-line"></i> Puntaje porcentual real</span>
             <span class="badge"><i class="fas fa-filter"></i> Filtros activos</span>
         </div>
     </div>
@@ -394,11 +394,11 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h3><i class="fas fa-chart-simple" style="margin-right: 10px;"></i> Línea de tendencia </h3>
-                <span style="font-size:0.7rem; color:#6a7a90;">Distribución normal</span>
+                <h3><i class="fas fa-chart-simple" style="margin-right: 10px;"></i> Comparativa de puntajes</h3>
+                <span style="font-size:0.7rem; color:#6a7a90;">Línea roja = Media</span>
             </div>
             <div class="chart-container">
-                <canvas id="bellChart"></canvas>
+                <canvas id="puntajeChart"></canvas>
             </div>
         </div>
     </div>
@@ -471,7 +471,8 @@
     <div class="footer-note">
         <i class="fas fa-arrow-up" style="color:#4cdb8c;"></i> Competencias fuertes (≥18) · 
         <i class="fas fa-arrow-down" style="color:#f56666;"></i> Competencias débiles (≤12) · 
-        <span style="color:#f5b342;">★</span> Evaluación basada en 10 competencias clave
+        <span style="color:#f5b342;">★</span> Evaluación basada en 10 competencias clave · 
+        <span style="color:#f5b342;">📊</span> Puntaje = (Sumatoria / 250) × 100%
     </div>
 </div>
 
@@ -499,11 +500,14 @@
         {code:"T000033", name:"Salcedo Galan, Merwil", area:"Area Armado", scores:[25,25,25,16,25,19,25,25,25,14]}
     ];
 
-    // Calcular puntaje promedio (porcentaje)
+    // Calcular puntaje con nueva fórmula: sumatoria / 250 * 100%
     empleadosData.forEach(e => {
         const sum = e.scores.reduce((a,b) => a+b, 0);
-        e.puntaje = parseFloat(((sum / 200) * 100).toFixed(1)); // max 200 (20*10)
+        e.puntaje = parseFloat(((sum / 250) * 100).toFixed(1)); // max 250 (25*10)
     });
+
+    // Calcular la media global de todos los empleados
+    const mediaGlobal = empleadosData.reduce((acc, e) => acc + e.puntaje, 0) / empleadosData.length;
 
     // ------------------------------------------------------------
     // 2. REFERENCIAS DOM
@@ -623,11 +627,11 @@
     // ------------------------------------------------------------
     // 5. GRÁFICOS (Chart.js)
     // ------------------------------------------------------------
-    let barChart, bellChart;
+    let barChart, puntajeChart;
 
     function initCharts() {
         const ctxBar = document.getElementById('barChart').getContext('2d');
-        const ctxBell = document.getElementById('bellChart').getContext('2d');
+        const ctxPuntaje = document.getElementById('puntajeChart').getContext('2d');
 
         barChart = new Chart(ctxBar, {
             type: 'bar',
@@ -645,33 +649,22 @@
                     legend: { display: false },
                 },
                 scales: {
-                    y: { beginAtZero: true, max: 80, grid: { color: '#1e2633' }, ticks: { color: '#8895aa' } },
+                    y: { beginAtZero: true, max: 100, grid: { color: '#1e2633' }, ticks: { color: '#8895aa' } },
                     x: { grid: { display: false }, ticks: { color: '#8895aa', maxRotation: 30, font: { size: 9 } } }
                 }
             }
         });
 
-        bellChart = new Chart(ctxBell, {
+        puntajeChart = new Chart(ctxPuntaje, {
             type: 'scatter',
             data: {
                 datasets: [{
-                    label: 'Distribución normal',
-                    data: [],
-                    backgroundColor: '#f5b342',
-                    borderColor: '#f5b342',
-                    pointRadius: 6,
-                    pointHoverRadius: 9,
-                    showLine: true,
-                    fill: false,
-                    tension: 0.4,
-                    borderWidth: 2,
-                }, {
-                    label: 'Empleados',
+                    label: 'Puntaje de empleados',
                     data: [],
                     backgroundColor: '#4cdb8c',
                     borderColor: '#4cdb8c',
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
                     showLine: false,
                 }]
             },
@@ -679,12 +672,22 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: false },
+                    legend: { 
+                        display: true,
+                        labels: {
+                            color: '#8895aa',
+                            font: { size: 10 }
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (context.datasetIndex === 0) return 'Curva normal';
-                                return `${context.raw.label || 'Empleado'}: ${context.raw.y}%`;
+                                if (context.datasetIndex === 0) {
+                                    return `${context.raw.label || 'Empleado'}: ${context.raw.y}%`;
+                                } else if (context.datasetIndex === 1) {
+                                    return `Media: ${context.raw.y}%`;
+                                }
+                                return '';
                             }
                         }
                     }
@@ -694,11 +697,12 @@
                         type: 'linear',
                         position: 'bottom',
                         grid: { color: '#1e2633' },
-                        ticks: { color: '#8895aa', stepSize: 1 },
-                        title: { display: true, text: 'Desviación estándar', color: '#8895aa' }
+                        ticks: { color: '#8895aa' },
+                        title: { display: true, text: 'Empleados (ordenados)', color: '#8895aa' }
                     },
                     y: {
                         beginAtZero: true,
+                        max: 100,
                         grid: { color: '#1e2633' },
                         ticks: { color: '#8895aa' },
                         title: { display: true, text: 'Puntaje (%)', color: '#8895aa' }
@@ -709,69 +713,85 @@
     }
 
     function updateCharts(filtered) {
-        if (!barChart || !bellChart) return;
+        if (!barChart || !puntajeChart) return;
 
         // ---- BAR CHART ----
         const labels = filtered.map(e => e.name.split(',')[0]);
         const data = filtered.map(e => e.puntaje);
-        const colors = filtered.map(e => e.puntaje >= 68 ? '#1e7a4a' : (e.puntaje >= 58 ? '#b8860b' : '#7a2a2a'));
+        const colors = filtered.map(e => e.puntaje >= 70 ? '#1e7a4a' : (e.puntaje >= 60 ? '#b8860b' : (e.puntaje >= 50 ? '#b8860b' : '#7a2a2a')));
 
         barChart.data.labels = labels;
         barChart.data.datasets[0].data = data;
         barChart.data.datasets[0].backgroundColor = colors;
         barChart.update();
 
-        // ---- BELL CHART (Campana de Gauss) ----
-        // Generar curva normal teórica en el rango de puntajes
-        const allPuntajes = empleadosData.map(e => e.puntaje);
-        const mean = allPuntajes.reduce((a,b) => a+b, 0) / allPuntajes.length;
-        const std = Math.sqrt(allPuntajes.reduce((a,b) => a + Math.pow(b-mean,2), 0) / allPuntajes.length);
-
-        // Curva normal (x = desviación estandar, y = puntaje)
-        const curvePoints = [];
-        const minX = -3, maxX = 3, steps = 40;
-        for (let i = 0; i <= steps; i++) {
-            const x = minX + (maxX - minX) * (i / steps);
-            const y = mean + x * std;
-            if (y >= 30 && y <= 85) {
-                curvePoints.push({ x: x, y: y });
-            }
-        }
-
-        // Puntos de empleados filtrados
-        const empPoints = filtered.map(e => {
-            const z = (e.puntaje - mean) / std;
-            return { x: z, y: e.puntaje, label: e.name.split(',')[0] };
-        });
-
-        bellChart.data.datasets[0].data = curvePoints;
-        bellChart.data.datasets[1].data = empPoints;
+        // ---- PUNTAJE CHART (Scatter plot con puntajes reales) ----
+        // Ordenar los empleados por puntaje para mejor visualización
+        const sortedFiltered = [...filtered].sort((a, b) => a.puntaje - b.puntaje);
+        
+        const empPoints = sortedFiltered.map((e, index) => ({
+            x: index + 1,
+            y: e.puntaje,
+            label: e.name.split(',')[0]
+        }));
 
         // Colorear puntos según puntaje
-        const pointColors = empPoints.map(p => p.y >= 68 ? '#4cdb8c' : (p.y >= 58 ? '#f5b342' : '#f56666'));
-        bellChart.data.datasets[1].backgroundColor = pointColors;
-        bellChart.data.datasets[1].borderColor = pointColors;
+        const pointColors = empPoints.map(p => p.y >= 70 ? '#4cdb8c' : (p.y >= 60 ? '#f5b342' : (p.y >= 50 ? '#f5b342' : '#f56666')));
+        
+        puntajeChart.data.datasets[0].data = empPoints;
+        puntajeChart.data.datasets[0].backgroundColor = pointColors;
+        puntajeChart.data.datasets[0].borderColor = pointColors;
+
+        // ---- AÑADIR LÍNEA DE LA MEDIA ----
+        // Crear línea de media para todos los puntos en el eje X
+        const minX = 0;
+        const maxX = empPoints.length + 1;
+        const mediaLine = [
+            { x: minX, y: mediaGlobal },
+            { x: maxX, y: mediaGlobal }
+        ];
+
+        // Verificar si ya existe el dataset de la media
+        if (puntajeChart.data.datasets.length > 1) {
+            // Actualizar el dataset existente
+            puntajeChart.data.datasets[1].data = mediaLine;
+        } else {
+            // Crear nuevo dataset para la media
+            puntajeChart.data.datasets.push({
+                label: 'Media',
+                data: mediaLine,
+                backgroundColor: '#ff4444',
+                borderColor: '#ff4444',
+                borderWidth: 2,
+                borderDash: [8, 4],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                showLine: true,
+                fill: false,
+                tension: 0
+            });
+        }
 
         // Resaltar el empleado seleccionado
         const selectedName = empleadoFilter.value;
         if (selectedName !== 'all') {
             const idx = empPoints.findIndex(p => p.label === selectedName.split(',')[0]);
             if (idx !== -1) {
-                bellChart.data.datasets[1].pointRadius = empPoints.map((_, i) => i === idx ? 12 : 5);
-                bellChart.data.datasets[1].pointBorderColor = empPoints.map((_, i) => i === idx ? '#ffffff' : 'transparent');
-                bellChart.data.datasets[1].pointBorderWidth = empPoints.map((_, i) => i === idx ? 3 : 0);
+                puntajeChart.data.datasets[0].pointRadius = empPoints.map((_, i) => i === idx ? 16 : 8);
+                puntajeChart.data.datasets[0].pointBorderColor = empPoints.map((_, i) => i === idx ? '#ffffff' : 'transparent');
+                puntajeChart.data.datasets[0].pointBorderWidth = empPoints.map((_, i) => i === idx ? 3 : 0);
             } else {
-                bellChart.data.datasets[1].pointRadius = empPoints.map(() => 5);
-                bellChart.data.datasets[1].pointBorderColor = empPoints.map(() => 'transparent');
-                bellChart.data.datasets[1].pointBorderWidth = empPoints.map(() => 0);
+                puntajeChart.data.datasets[0].pointRadius = empPoints.map(() => 8);
+                puntajeChart.data.datasets[0].pointBorderColor = empPoints.map(() => 'transparent');
+                puntajeChart.data.datasets[0].pointBorderWidth = empPoints.map(() => 0);
             }
         } else {
-            bellChart.data.datasets[1].pointRadius = empPoints.map(() => 5);
-            bellChart.data.datasets[1].pointBorderColor = empPoints.map(() => 'transparent');
-            bellChart.data.datasets[1].pointBorderWidth = empPoints.map(() => 0);
+            puntajeChart.data.datasets[0].pointRadius = empPoints.map(() => 8);
+            puntajeChart.data.datasets[0].pointBorderColor = empPoints.map(() => 'transparent');
+            puntajeChart.data.datasets[0].pointBorderWidth = empPoints.map(() => 0);
         }
 
-        bellChart.update();
+        puntajeChart.update();
     }
 
     // ------------------------------------------------------------
@@ -793,10 +813,12 @@
     // Ajuste de altura de gráficos en resize
     window.addEventListener('resize', () => {
         if (barChart) barChart.resize();
-        if (bellChart) bellChart.resize();
+        if (puntajeChart) puntajeChart.resize();
     });
 
     console.log('✅ Panel de Evaluación de Competencias cargado correctamente.');
+    console.log(`📊 Puntaje calculado como: (Sumatoria / 250) × 100%`);
+    console.log(`📈 Media global: ${mediaGlobal.toFixed(1)}%`);
 </script>
 </body>
 </html>
