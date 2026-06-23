@@ -481,23 +481,30 @@
     // 1. DATOS
     // ------------------------------------------------------------
     const empleadosData = [
-        {code:"E000006", name:"Florez Cota, Jarlys", area:"Area Armado", scores:[20,24,18,19,19,13,11,21,20,16]},
-        {code:"E000004", name:"Carmona Chamorro, Franklin", area:"Area Armado", scores:[17,17,18,19,19,18,15,19,18,17]},
-        {code:"E000013", name:"Medina Batista, Kaner", area:"Area Armado", scores:[17,18,13,19,16,18,14,19,20,20]},
-        {code:"E000015", name:"Nuñez Guardo, Dario", area:"Area Armado", scores:[20,18,18,16,17,18,16,18,15,18]},
-        {code:"T000034", name:"Ballesteros Castillo, Juan David", area:"Area Armado", scores:[20,15,18,19,19,19,14,15,14,18]},
-        {code:"E000018", name:"Romero Julio, German", area:"Area Armado", scores:[18,17,16,18,17,15,13,19,19,18]},
-        {code:"E000017", name:"Polo Florez, Victor", area:"Area Armado", scores:[19,17,15,14,15,19,15,15,15,19]},
-        {code:"E000010", name:"Julio Hernandez, Alejandro", area:"Area Armado", scores:[12,17,17,17,16,18,11,15,15,20]},
-        {code:"E000008", name:"Hernandez Banquez, Jhonny", area:"Area Armado", scores:[14,16,14,12,16,11,8,19,22,21]},
-        {code:"E000206", name:"Cardales Navarro, Edgar", area:"Area Armado", scores:[13,12,17,16,13,18,14,12,16,18]},
-        {code:"T000101", name:"Alcala Santodomingo, Farly de Jesus", area:"Area Armado", scores:[19,13,17,12,17,15,17,10,13,13]},
-        {code:"T000052", name:"Malo Narvaez, Hector", area:"Area Armado", scores:[17,13,15,13,15,18,12,13,10,19]},
-        {code:"T000031", name:"Puello Polo, Johnny Jose", area:"Area Armado", scores:[16,15,14,15,13,15,11,12,14,18]},
-        {code:"T000102", name:"Banquez Chamorro, Helmer Luis", area:"Area Armado", scores:[12,14,17,14,12,20,16,10,13,14]},
-        {code:"T000032", name:"Ramos Tejada, Gustavo Adolfo", area:"Area Armado", scores:[17,14,12,15,12,17,13,12,12,15]},
-        {code:"T000030", name:"Cerra Romero, Brayan Antonio", area:"Area Armado", scores:[17,12,13,16,10,19,9,6,8,14]},
-        {code:"T000033", name:"Salcedo Galan, Merwil", area:"Area Armado", scores:[25,25,25,16,25,19,25,25,25,14]}
+
+{code:"E000002", name:"Cabarcas Cervantes, Carlos", area:"Area Armado", scores:[21,23,17,18,20,20,15,22,21,21]},
+{code:"E000006", name:"Florez Cota, Jarlys", area:"Area Armado", scores:[20,24,18,19,19,13,11,21,20,16]},
+{code:"E000004", name:"Carmona Chamorro, Franklin", area:"Area Armado", scores:[17,17,18,19,19,18,15,19,18,17]},
+{code:"E000013", name:"Medina Batista, Kaner", area:"Area Armado", scores:[17,18,13,19,16,18,14,19,20,20]},
+{code:"E000015", name:"Nuñez Guardo, Dario", area:"Area Armado", scores:[20,18,18,16,17,18,16,18,15,18]},
+{code:"T000034", name:"Ballesteros Castillo, Juan David", area:"Area Armado", scores:[20,15,18,19,19,19,14,15,14,18]},
+{code:"E000018", name:"Romero Julio, German", area:"Area Armado", scores:[18,17,16,18,17,15,13,19,19,18]},
+{code:"E000003", name:"Cabrera Anaya, Marlon", area:"Area Armado", scores:[16,17,18,17,20,12,12,19,14,22]},
+{code:"E000017", name:"Polo Florez, Victor", area:"Area Armado", scores:[19,17,15,14,15,19,15,15,15,19]},
+{code:"E000010", name:"Julio Hernandez, Alejandro", area:"Area Armado", scores:[12,17,17,17,16,18,11,15,15,20]},
+{code:"E000020", name:"Tamara Correa, Francisco", area:"Area Armado", scores:[15,18,16,14,14,13,10,19,20,18]},
+{code:"E000008", name:"Hernandez Banquez, Jhonny", area:"Area Armado", scores:[14,16,14,12,16,11,8,19,22,21]},
+{code:"E000019", name:"Secca Valdez, Victor", area:"Area Armado", scores:[10,20,14,15,13,12,10,19,20,20]},
+{code:"E000016", name:"Parra Gonzalez, Hernando", area:"Area Armado", scores:[14,13,12,18,17,14,15,20,16,11]},
+{code:"E000206", name:"Cardales Navarro, Edgar", area:"Area Armado", scores:[13,12,17,16,13,18,14,12,16,18]},
+{code:"T000101", name:"Alcala Santodomingo, Farly de Jesus", area:"Area Armado", scores:[19,13,17,12,17,15,17,10,13,13]},
+{code:"T000052", name:"Malo Narvaez, Hector", area:"Area Armado", scores:[17,13,15,13,15,18,12,13,10,19]},
+{code:"T000031", name:"Puello Polo, Johnny Jose", area:"Area Armado", scores:[16,15,14,15,13,15,11,12,14,18]},
+{code:"T000102", name:"Banquez Chamorro, Helmer Luis", area:"Area Armado", scores:[12,14,17,14,12,20,16,10,13,14]},
+{code:"T000032", name:"Ramos Tejada, Gustavo Adolfo", area:"Area Armado", scores:[17,14,12,15,12,17,13,12,12,15]},
+{code:"T000033", name:"Salcedo Galan, Merwil", area:"Area Armado", scores:[15,12,13,16,12,19,12,11,9,16]},
+{code:"T000030", name:"Cerra Romero, Brayan Antonio", area:"Area Armado", scores:[17,12,13,16,10,19,9,6,8,14]}
+
     ];
 
     // Calcular puntaje con nueva fórmula: sumatoria / 250 * 100%
