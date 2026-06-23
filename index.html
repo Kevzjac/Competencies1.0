@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Evaluación de Competencias</title>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #384152;
+            color: #e8edf5;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal */
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0 30px 0;
+            border-bottom: 1px solid rgba(255, 217, 0, 0.103);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-weight: 300;
+            letter-spacing: 2px;
+            font-size: 2rem;
+        }
+        .header h1 span {
+            font-weight: 700;
+            color: #f5b3429f;
+            background: linear-gradient(145deg, #f5b342, #d4892b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-sub {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(245, 179, 66, 0.15);
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid rgba(245, 179, 66, 0.3);
+            font-size: 0.85rem;
+            color: #f5b342;
+        }
+
+        /* Filtros */
+        .filters {
+            background: #141a24;
+            padding: 20px 25px;
+            border-radius: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            align-items: flex-end;
+            margin-bottom: 35px;
+            border: 1px solid #2a3342;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1 1 180px;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8895aa;
+            font-weight: 600;
+        }
+
+        .filter-group select, .filter-group input {
+            background: #0f141e;
+            border: 1px solid #2a3342;
+            padding: 10px 14px;
+            border-radius: 12px;
+            color: #e8edf5;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            outline: none;
+            width: 100%;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            border-color: #f5b342;
+            box-shadow: 0 0 0 3px rgba(245, 179, 66, 0.15);
+        }
+
+        .filter-group select option {
+            background: #141a24;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: 1px solid #2a3342;
+            color: #8895aa;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .clear-btn:hover {
+            background: #2a3342;
+            color: #e8edf5;
+        }
+
+        /* Grid de gráficos */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: #141a24;
+            border-radius: 24px;
+            padding: 25px 20px 20px 20px;
+            border: 1px solid #232b38;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            transition: all 0.2s;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-header h3 {
+            font-weight: 400;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            color: #cbd5e1;
+        }
+
+        .card-header i {
+            color: #f5b342;
+            font-size: 1.3rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        /* Tabla */
+        .table-wrapper {
+            background: #141a24;
+            border-radius: 24px;
+            padding: 5px 5px 5px 5px;
+            border: 1px solid #232b38;
+            overflow-x: auto;
+            margin-top: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .table-scroll {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+            background: #0b0e14;
+            border-radius: 10px;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #2a3342;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            min-width: 1100px;
+        }
+
+        th {
+            background: #1e2633;
+            color: #a0b0c7;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 10px 4px;
+            text-align: center;
+            border-bottom: 2px solid #2a3342;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            font-size: 0.6rem;
+            line-height: 1.2;
+            vertical-align: middle;
+        }
+
+        th .competencia-nombre {
+            display: block;
+            font-size: 0.55rem;
+            font-weight: 500;
+            text-transform: none;
+            letter-spacing: 0.2px;
+            color: #8895aa;
+            margin-top: 2px;
+            line-height: 1.2;
+            max-width: 70px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        th .competencia-num {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #f5b342;
+        }
+
+        td {
+            padding: 10px 4px;
+            text-align: center;
+            border-bottom: 1px solid #1e2633;
+            color: #dbe1ed;
+            font-size: 0.75rem;
+        }
+
+        td:first-child, th:first-child { 
+            padding-left: 12px; 
+            text-align: left; 
+            min-width: 85px;
+        }
+        td:nth-child(2), th:nth-child(2) { 
+            text-align: left; 
+            min-width: 180px;
+        }
+        td:nth-child(3), th:nth-child(3) { 
+            min-width: 100px;
+        }
+
+        .highlight-row {
+            background: #1f2a3a !important;
+            border-left: 3px solid #f5b342;
+        }
+
+        .empleado-nombre {
+            font-weight: 500;
+            color: #e8edf5;
+        }
+
+        .area-badge {
+            background: #1e2a3a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            color: #8895aa;
+            display: inline-block;
+        }
+
+        /* Escala de colores para competencias */
+        .score-cell {
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 3px 5px;
+            min-width: 28px;
+            display: inline-block;
+            font-size: 0.75rem;
+        }
+
+        .score-high { background: #1e7a4a; color: #b3f0d0; }
+        .score-mid { background: #b8860b; color: #fff3cd; }
+        .score-low { background: #7a2a2a; color: #f5baba; }
+        .score-verylow { background: #4a1515; color: #f5baba; }
+
+        .puntaje-general {
+            font-weight: 700;
+            font-size: 0.85rem;
+            min-width: 60px;
+        }
+
+        .text-green { color: #4cdb8c; }
+        .text-red { color: #f56666; }
+        .text-gold { color: #f5b342; }
+
+        /* Footer */
+        .footer-note {
+            margin-top: 30px;
+            text-align: center;
+            color: #4a5568;
+            font-size: 0.8rem;
+            border-top: 1px solid #1e2633;
+            padding-top: 25px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            .header h1 { font-size: 1.4rem; }
+            .filters { flex-direction: column; align-items: stretch; }
+            .filter-group { flex: 1 1 auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div>
+            <h1><span>✦</span> Evaluación de Competencias <span>ICB 4.0 IPMA Personas</span></h1>
+            <div style="font-size:0.8rem; color:#6a7a90; margin-top:6px;">
+                <i class="fas fa-users" style="color:#f5b342;"></i> <b>16 empleados · 10 competencias</b>
+            </div>
+        </div>
+        <div class="header-sub">
+            <span class="badge"><i class="fas fa-chart-line"></i> Distribución normal</span>
+            <span class="badge"><i class="fas fa-filter"></i> Filtros activos</span>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters">
+        <div class="filter-group">
+            <label><i class="fas fa-building"></i> Área</label>
+            <select id="areaFilter">
+                <option value="all">Todas las áreas</option>
+                <option value="Area Armado">Área Armado</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label><i class="fas fa-user"></i> Empleado</label>
+            <select id="empleadoFilter">
+                <option value="all">Todos los empleados</option>
+            </select>
+        </div>
+        <div class="filter-group" style="flex: 0 0 auto;">
+            <button class="clear-btn" id="clearFilters"><i class="fas fa-times-circle"></i> Limpiar filtros</button>
+        </div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-bar" style="margin-right: 10px;"></i> Puntaje general</h3>
+                <span style="font-size:0.7rem; color:#6a7a90;">Verde = más alto · Rojo = más bajo</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-simple" style="margin-right: 10px;"></i> Línea de tendencia </h3>
+                <span style="font-size:0.7rem; color:#6a7a90;">Distribución normal</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="bellChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div style="margin-top: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap:10px;">
+            <h3 style="font-weight:400; color:#cbd5e1;"><i class="fas fa-table" style="color:#f5b342; margin-right:10px;"></i>Matriz de calificaciones</h3>
+            <span style="font-size:0.7rem; color:#6a7a90;"><i class="fas fa-circle" style="color:#1e7a4a;"></i> Alto · <i class="fas fa-circle" style="color:#b8860b;"></i> Medio · <i class="fas fa-circle" style="color:#7a2a2a;"></i> Bajo</span>
+        </div>
+        <div class="table-wrapper">
+            <div class="table-scroll">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Persona</th>
+                            <th>Área</th>
+                            <th>
+                                <span class="competencia-num">1</span>
+                                <span class="competencia-nombre">Autorreflexión y autogestión</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">2</span>
+                                <span class="competencia-nombre">Integridad personal y fiabilidad</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">3</span>
+                                <span class="competencia-nombre">Comunicación personal</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">4</span>
+                                <span class="competencia-nombre">Relaciones y participación</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">5</span>
+                                <span class="competencia-nombre">Liderazgo</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">6</span>
+                                <span class="competencia-nombre">Trabajo en equipo</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">7</span>
+                                <span class="competencia-nombre">Conflicto y crisis</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">8</span>
+                                <span class="competencia-nombre">Ingenio</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">9</span>
+                                <span class="competencia-nombre">Negociación</span>
+                            </th>
+                            <th>
+                                <span class="competencia-num">10</span>
+                                <span class="competencia-nombre">Orientación a resultados</span>
+                            </th>
+                            <th>Puntaje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Datos generados por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <i class="fas fa-arrow-up" style="color:#4cdb8c;"></i> Competencias fuertes (≥18) · 
+        <i class="fas fa-arrow-down" style="color:#f56666;"></i> Competencias débiles (≤12) · 
+        <span style="color:#f5b342;">★</span> Evaluación basada en 10 competencias clave
+    </div>
+</div>
+
+<script>
+    // ------------------------------------------------------------
+    // 1. DATOS
+    // ------------------------------------------------------------
+    const empleadosData = [
+        {code:"E000006", name:"Florez Cota, Jarlys", area:"Area Armado", scores:[20,24,18,19,19,13,11,21,20,16]},
+        {code:"E000004", name:"Carmona Chamorro, Franklin", area:"Area Armado", scores:[17,17,18,19,19,18,15,19,18,17]},
+        {code:"E000013", name:"Medina Batista, Kaner", area:"Area Armado", scores:[17,18,13,19,16,18,14,19,20,20]},
+        {code:"E000015", name:"Nuñez Guardo, Dario", area:"Area Armado", scores:[20,18,18,16,17,18,16,18,15,18]},
+        {code:"T000034", name:"Ballesteros Castillo, Juan David", area:"Area Armado", scores:[20,15,18,19,19,19,14,15,14,18]},
+        {code:"E000018", name:"Romero Julio, German", area:"Area Armado", scores:[18,17,16,18,17,15,13,19,19,18]},
+        {code:"E000017", name:"Polo Florez, Victor", area:"Area Armado", scores:[19,17,15,14,15,19,15,15,15,19]},
+        {code:"E000010", name:"Julio Hernandez, Alejandro", area:"Area Armado", scores:[12,17,17,17,16,18,11,15,15,20]},
+        {code:"E000008", name:"Hernandez Banquez, Jhonny", area:"Area Armado", scores:[14,16,14,12,16,11,8,19,22,21]},
+        {code:"E000206", name:"Cardales Navarro, Edgar", area:"Area Armado", scores:[13,12,17,16,13,18,14,12,16,18]},
+        {code:"T000101", name:"Alcala Santodomingo, Farly de Jesus", area:"Area Armado", scores:[19,13,17,12,17,15,17,10,13,13]},
+        {code:"T000052", name:"Malo Narvaez, Hector", area:"Area Armado", scores:[17,13,15,13,15,18,12,13,10,19]},
+        {code:"T000031", name:"Puello Polo, Johnny Jose", area:"Area Armado", scores:[16,15,14,15,13,15,11,12,14,18]},
+        {code:"T000102", name:"Banquez Chamorro, Helmer Luis", area:"Area Armado", scores:[12,14,17,14,12,20,16,10,13,14]},
+        {code:"T000032", name:"Ramos Tejada, Gustavo Adolfo", area:"Area Armado", scores:[17,14,12,15,12,17,13,12,12,15]},
+        {code:"T000030", name:"Cerra Romero, Brayan Antonio", area:"Area Armado", scores:[17,12,13,16,10,19,9,6,8,14]},
+        {code:"T000033", name:"Salcedo Galan, Merwil", area:"Area Armado", scores:[17,12,13,16,10,19,9,6,8,14]}
+    ];
+
+    // Calcular puntaje promedio (porcentaje)
+    empleadosData.forEach(e => {
+        const sum = e.scores.reduce((a,b) => a+b, 0);
+        e.puntaje = parseFloat(((sum / 200) * 100).toFixed(1)); // max 200 (20*10)
+    });
+
+    // ------------------------------------------------------------
+    // 2. REFERENCIAS DOM
+    // ------------------------------------------------------------
+    const tableBody = document.getElementById('tableBody');
+    const areaFilter = document.getElementById('areaFilter');
+    const empleadoFilter = document.getElementById('empleadoFilter');
+    const clearBtn = document.getElementById('clearFilters');
+
+    // ------------------------------------------------------------
+    // 3. FUNCIONES AUXILIARES
+    // ------------------------------------------------------------
+    function getColorClass(val) {
+        if (val >= 18) return 'score-high';
+        if (val >= 14) return 'score-mid';
+        if (val >= 10) return 'score-low';
+        return 'score-verylow';
+    }
+
+    function renderTable(data) {
+        tableBody.innerHTML = '';
+        data.forEach((emp, idx) => {
+            const tr = document.createElement('tr');
+            // resaltar si es el seleccionado (por nombre)
+            const selectedName = empleadoFilter.value;
+            if (selectedName !== 'all' && emp.name === selectedName) {
+                tr.classList.add('highlight-row');
+            }
+
+            // Código
+            let td = document.createElement('td');
+            td.textContent = emp.code;
+            tr.appendChild(td);
+
+            // Nombre
+            td = document.createElement('td');
+            td.textContent = emp.name;
+            td.style.fontWeight = '500';
+            tr.appendChild(td);
+
+            // Área
+            td = document.createElement('td');
+            td.innerHTML = `<span class="area-badge">${emp.area}</span>`;
+            tr.appendChild(td);
+
+            // Competencias 1..10
+            emp.scores.forEach(val => {
+                td = document.createElement('td');
+                const span = document.createElement('span');
+                span.className = `score-cell ${getColorClass(val)}`;
+                span.textContent = val;
+                td.appendChild(span);
+                tr.appendChild(td);
+            });
+
+            // Puntaje %
+            td = document.createElement('td');
+            td.className = 'puntaje-general';
+            const color = emp.puntaje >= 68 ? 'text-green' : (emp.puntaje >= 58 ? 'text-gold' : 'text-red');
+            td.innerHTML = `<span class="${color}">${emp.puntaje}%</span>`;
+            tr.appendChild(td);
+
+            tableBody.appendChild(tr);
+        });
+    }
+
+    // Llenar select de empleados
+    function populateEmpleadoSelect(data) {
+        const currentVal = empleadoFilter.value;
+        empleadoFilter.innerHTML = '<option value="all">Todos los empleados</option>';
+        data.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.name;
+            opt.textContent = e.name;
+            empleadoFilter.appendChild(opt);
+        });
+        if (currentVal !== 'all' && data.some(e => e.name === currentVal)) {
+            empleadoFilter.value = currentVal;
+        } else {
+            empleadoFilter.value = 'all';
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 4. FILTRADO Y ACTUALIZACIÓN
+    // ------------------------------------------------------------
+    function getFilteredData() {
+        const area = areaFilter.value;
+        const empleado = empleadoFilter.value;
+        let filtered = empleadosData;
+
+        if (area !== 'all') {
+            filtered = filtered.filter(e => e.area === area);
+        }
+        if (empleado !== 'all') {
+            filtered = filtered.filter(e => e.name === empleado);
+        }
+        return filtered;
+    }
+
+    function updateAll() {
+        const filtered = getFilteredData();
+        renderTable(filtered);
+        updateCharts(filtered);
+        // mantener select de empleados sincronizado con el filtro de área
+        const area = areaFilter.value;
+        let pool = empleadosData;
+        if (area !== 'all') pool = pool.filter(e => e.area === area);
+        populateEmpleadoSelect(pool);
+        // restaurar el valor seleccionado si es posible
+        const currentEmp = empleadoFilter.value;
+        if (currentEmp !== 'all' && !pool.some(e => e.name === currentEmp)) {
+            empleadoFilter.value = 'all';
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 5. GRÁFICOS (Chart.js)
+    // ------------------------------------------------------------
+    let barChart, bellChart;
+
+    function initCharts() {
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        const ctxBell = document.getElementById('bellChart').getContext('2d');
+
+        barChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: { labels: [], datasets: [{
+                label: 'Puntaje (%)',
+                data: [],
+                backgroundColor: [],
+                borderRadius: 6,
+                borderSkipped: false,
+            }]},
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 80, grid: { color: '#1e2633' }, ticks: { color: '#8895aa' } },
+                    x: { grid: { display: false }, ticks: { color: '#8895aa', maxRotation: 30, font: { size: 9 } } }
+                }
+            }
+        });
+
+        bellChart = new Chart(ctxBell, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Distribución normal',
+                    data: [],
+                    backgroundColor: '#f5b342',
+                    borderColor: '#f5b342',
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    showLine: true,
+                    fill: false,
+                    tension: 0.4,
+                    borderWidth: 2,
+                }, {
+                    label: 'Empleados',
+                    data: [],
+                    backgroundColor: '#4cdb8c',
+                    borderColor: '#4cdb8c',
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    showLine: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 0) return 'Curva normal';
+                                return `${context.raw.label || 'Empleado'}: ${context.raw.y}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { 
+                        type: 'linear',
+                        position: 'bottom',
+                        grid: { color: '#1e2633' },
+                        ticks: { color: '#8895aa', stepSize: 1 },
+                        title: { display: true, text: 'Desviación estándar', color: '#8895aa' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#1e2633' },
+                        ticks: { color: '#8895aa' },
+                        title: { display: true, text: 'Puntaje (%)', color: '#8895aa' }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCharts(filtered) {
+        if (!barChart || !bellChart) return;
+
+        // ---- BAR CHART ----
+        const labels = filtered.map(e => e.name.split(',')[0]);
+        const data = filtered.map(e => e.puntaje);
+        const colors = filtered.map(e => e.puntaje >= 68 ? '#1e7a4a' : (e.puntaje >= 58 ? '#b8860b' : '#7a2a2a'));
+
+        barChart.data.labels = labels;
+        barChart.data.datasets[0].data = data;
+        barChart.data.datasets[0].backgroundColor = colors;
+        barChart.update();
+
+        // ---- BELL CHART (Campana de Gauss) ----
+        // Generar curva normal teórica en el rango de puntajes
+        const allPuntajes = empleadosData.map(e => e.puntaje);
+        const mean = allPuntajes.reduce((a,b) => a+b, 0) / allPuntajes.length;
+        const std = Math.sqrt(allPuntajes.reduce((a,b) => a + Math.pow(b-mean,2), 0) / allPuntajes.length);
+
+        // Curva normal (x = desviación estandar, y = puntaje)
+        const curvePoints = [];
+        const minX = -3, maxX = 3, steps = 40;
+        for (let i = 0; i <= steps; i++) {
+            const x = minX + (maxX - minX) * (i / steps);
+            const y = mean + x * std;
+            if (y >= 30 && y <= 85) {
+                curvePoints.push({ x: x, y: y });
+            }
+        }
+
+        // Puntos de empleados filtrados
+        const empPoints = filtered.map(e => {
+            const z = (e.puntaje - mean) / std;
+            return { x: z, y: e.puntaje, label: e.name.split(',')[0] };
+        });
+
+        bellChart.data.datasets[0].data = curvePoints;
+        bellChart.data.datasets[1].data = empPoints;
+
+        // Colorear puntos según puntaje
+        const pointColors = empPoints.map(p => p.y >= 68 ? '#4cdb8c' : (p.y >= 58 ? '#f5b342' : '#f56666'));
+        bellChart.data.datasets[1].backgroundColor = pointColors;
+        bellChart.data.datasets[1].borderColor = pointColors;
+
+        // Resaltar el empleado seleccionado
+        const selectedName = empleadoFilter.value;
+        if (selectedName !== 'all') {
+            const idx = empPoints.findIndex(p => p.label === selectedName.split(',')[0]);
+            if (idx !== -1) {
+                bellChart.data.datasets[1].pointRadius = empPoints.map((_, i) => i === idx ? 12 : 5);
+                bellChart.data.datasets[1].pointBorderColor = empPoints.map((_, i) => i === idx ? '#ffffff' : 'transparent');
+                bellChart.data.datasets[1].pointBorderWidth = empPoints.map((_, i) => i === idx ? 3 : 0);
+            } else {
+                bellChart.data.datasets[1].pointRadius = empPoints.map(() => 5);
+                bellChart.data.datasets[1].pointBorderColor = empPoints.map(() => 'transparent');
+                bellChart.data.datasets[1].pointBorderWidth = empPoints.map(() => 0);
+            }
+        } else {
+            bellChart.data.datasets[1].pointRadius = empPoints.map(() => 5);
+            bellChart.data.datasets[1].pointBorderColor = empPoints.map(() => 'transparent');
+            bellChart.data.datasets[1].pointBorderWidth = empPoints.map(() => 0);
+        }
+
+        bellChart.update();
+    }
+
+    // ------------------------------------------------------------
+    // 6. EVENTOS E INICIALIZACIÓN
+    // ------------------------------------------------------------
+    areaFilter.addEventListener('change', updateAll);
+    empleadoFilter.addEventListener('change', updateAll);
+    clearBtn.addEventListener('click', () => {
+        areaFilter.value = 'all';
+        empleadoFilter.value = 'all';
+        updateAll();
+    });
+
+    // Inicializar
+    initCharts();
+    populateEmpleadoSelect(empleadosData);
+    updateAll();
+
+    // Ajuste de altura de gráficos en resize
+    window.addEventListener('resize', () => {
+        if (barChart) barChart.resize();
+        if (bellChart) bellChart.resize();
+    });
+
+    console.log('✅ Panel de Evaluación de Competencias cargado correctamente.');
+</script>
+</body>
+</html>
